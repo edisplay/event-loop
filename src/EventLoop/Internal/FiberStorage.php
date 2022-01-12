@@ -20,7 +20,7 @@ final class FiberStorage
 
     public function set(FiberLocal $fiberLocal, mixed $value): void
     {
-        $weakMap = ($this->weakMap ??= new WeakMap);
+        $weakMap = ($this->weakMap ??= new WeakMap());
         $weakMap[$fiberLocal] = $value;
     }
 
