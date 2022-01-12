@@ -37,7 +37,8 @@ class FiberLocalTest extends TestCase
 
         $suspension = EventLoop::createSuspension();
 
-        EventLoop::defer(static function () use ($fiberLocal, &$fiber1) {
+        EventLoop::defer(static function () use ($fiberLocal, &$fiber1, &$deferLocal) {
+            $deferLocal = new FiberLocal('defer');
             $fiberLocal->set('fiber');
             $fiber1 = \Fiber::getCurrent();
         });
@@ -49,6 +50,7 @@ class FiberLocalTest extends TestCase
 
         self::assertNull($suspension->suspend());
         self::assertSame($fiber1, $fiber2);
+        self::assertNull($deferLocal->get());
     }
 
     public function testMicrotaskFiberClear(): void

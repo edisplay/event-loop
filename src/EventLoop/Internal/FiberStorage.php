@@ -11,7 +11,7 @@ final class FiberStorage
 
     public function get(FiberLocal $fiberLocal): mixed
     {
-        if (!$this->weakMap) {
+        if (!$this->weakMap || !isset($this->weakMap[$fiberLocal])) {
             return null;
         }
 
