@@ -6,6 +6,8 @@ namespace Revolt\EventLoop;
  * Fiber local storage.
  *
  * Each instance stores data separately for each fiber. Usage examples include contextual logging data.
+ *
+ * @template T
  */
 final class FiberLocal
 {
@@ -13,12 +15,19 @@ final class FiberLocal
     private static ?\Fiber $mainFiber = null;
     private static ?\WeakMap $localStorage = null;
 
-    public static function clear(): void
+    /** @internal */
+    public static function getFiberStorage(): Internal\FiberStorage
     {
         $fiber = self::getFiber();
         $localStorage = self::getLocalStorage();
 
-        unset($localStorage[$fiber]);
+        if (!isset($localStorage[$fiber])) {
+            $storage = new Internal\FiberStorage();
+            $localStorage[$fiber] = $storage;
+            return $storage;
+        }
+
+        return $localStorage[$fiber];
     }
 
     private static function getLocalStorage(): \WeakMap
@@ -39,28 +48,27 @@ final class FiberLocal
         return $fiber;
     }
 
+    /**
+     * @param T $value
+     */
     public function __construct(mixed $value)
     {
         $this->set($value);
     }
 
+    /**
+     * @param T $value
+     */
     public function set(mixed $value): void
     {
-        $fiber = self::getFiber();
-        $localStorage = self::getLocalStorage();
-
-        if (!isset($localStorage[$fiber])) {
-            $localStorage[$fiber] = new \WeakMap();
-        }
-
-        $localStorage[$fiber][$this] = $value;
+        self::getFiberStorage()->set($this, $value);
     }
 
+    /**
+     * @return T
+     */
     public function get(): mixed
     {
-        $fiber = self::getFiber();
-        $localStorage = self::getLocalStorage();
-
-        return $localStorage[$fiber][$this] ?? null;
+        return self::getFiberStorage()->get($this);
     }
 }

@@ -31,44 +31,6 @@ class FiberLocalTest extends TestCase
         self::assertSame('main', $fiberLocal->get());
     }
 
-    public function testManualClear(): void
-    {
-        $fiberLocal = new FiberLocal('main');
-
-        self::assertSame('main', $fiberLocal->get());
-
-        $suspension = EventLoop::createSuspension();
-
-        EventLoop::queue(static function () use ($suspension, $fiberLocal, &$fiberSuspension) {
-            $fiberSuspension = EventLoop::createSuspension();
-
-            $fiberLocal->set('fiber');
-            $suspension->resume($fiberLocal->get());
-
-            $fiberSuspension->suspend();
-            $suspension->resume($fiberLocal->get());
-
-            $fiberSuspension->suspend();
-            FiberLocal::clear();
-            $suspension->resume($fiberLocal->get());
-        });
-
-        self::assertSame('fiber', $suspension->suspend());
-        self::assertSame('main', $fiberLocal->get());
-
-        FiberLocal::clear();
-
-        $fiberSuspension->resume();
-
-        self::assertSame('fiber', $suspension->suspend());
-        self::assertNull($fiberLocal->get());
-
-        $fiberSuspension->resume();
-
-        self::assertNull($suspension->suspend());
-        self::assertNull($fiberLocal->get());
-    }
-
     public function testCallbackFiberClear(): void
     {
         $fiberLocal = new FiberLocal('main');
